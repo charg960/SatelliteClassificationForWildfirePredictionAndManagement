@@ -1,7 +1,5 @@
-# SatelliteClassificationForWildfirePredictionAndManagement
-Exploring and analyzing a Kaggle dataset using Data Mining methods (mainly classification and visualization)
-
 # Satellite Classification of Wildfire Behavior
+Exploring and analyzing a Kaggle dataset using Data Mining methods (mainly classification and visualization)
 
 ## Overview
 This project explores whether satellite-derived data can be used to classify wildfire behavior. Specifically, it examines two questions:
