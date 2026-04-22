@@ -108,3 +108,5 @@ Future improvements in sensor resolution and data availability could significant
 
 ## Author
 Charlotte Dickson
+Dr. Chathuri Perera
+Data Mining (CSC 314) Final Project
