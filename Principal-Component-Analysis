@@ -1,0 +1,89 @@
+rf_day <- randomForest(
+  day_night ~ frp + bright_t31 + hour_of_day + diurnal_cycle + time_since_last,
+  data = train,
+  ntree = 500,
+  mtry = 3,
+  importance = TRUE
+)
+
+rf_day_pred <- predict(rf_day, test)
+
+confusionMatrix(rf_day_pred, test$day_night)
+
+# Variable importance
+varImpPlot(rf_day, main = "Variable Importance: Day vs Night")
+
+
+# RANDOM FOREST: FIRE INTENSITY
+set.seed(123)
+
+rf_intensity <- randomForest(
+  intensity_class ~ bright_t31 + hour_of_day + diurnal_cycle + time_since_last,
+  data = train,
+  ntree = 500,
+  mtry = 2,
+  importance = TRUE
+)
+
+rf_intensity_pred <- predict(rf_intensity, test)
+
+confusionMatrix(rf_intensity_pred, test$intensity_class)
+
+# Variable importance
+varImpPlot(rf_intensity, main = "Variable Importance: Fire Intensity")
+
+
+# PCA on predictors (same as yours, but clean and first step)
+pca <- prcomp(
+  train[, c("bright_t31", "hour_of_day", "diurnal_cycle", "time_since_last")],
+  scale. = TRUE
+)
+
+# Variance explained
+pca_var <- pca$sdev^2
+pca_var_exp <- pca_var / sum(pca_var)
+
+# Scree plot
+plot(
+  pca_var_exp,
+  type = "b",
+  xlab = "Principal Component",
+  ylab = "Proportion of Variance Explained",
+  main = "PCA Variance Explained"
+)
+
+# Cumulative variance
+plot(
+  cumsum(pca_var_exp),
+  type = "b",
+  xlab = "Number of Components",
+  ylab = "Cumulative Variance Explained",
+  main = "Cumulative PCA Variance"
+)
+abline(h = 0.8, col = "red", lty = 2)
+
+# PCA scores dataframe
+train_pca <- as.data.frame(pca$x[, 1:2])
+train_pca$intensity_class <- train$intensity_class
+train_pca$day_night <- train$day_night
+
+# PCA scatter plot (Intensity)
+ggplot(train_pca, aes(PC1, PC2, color = intensity_class)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "PCA Space: Fire Intensity Structure",
+    x = "PC1 (Thermal + Intensity Gradient)",
+    y = "PC2 (Temporal Variation)"
+  ) +
+  theme_minimal(base_size = 14)
+
+# PCA scatter plot (Day/Night)
+ggplot(train_pca, aes(PC1, PC2, color = day_night)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "PCA Space: Day vs Night Separation",
+    x = "PC1",
+    y = "PC2"
+  ) +
+  theme_minimal(base_size = 14)
+
