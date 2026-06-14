@@ -15,6 +15,8 @@ Two classification tasks are addressed:
 
 Final models achieve **98.6% (RF) and 99.4% (XGBoost)** accuracy on held-out test data.
 
+Still in progress: Testing on other datasets.
+
 ## Dataset
 
 **Source:** [Fires From Space - Australia & New Zealand](https://www.kaggle.com/datasets/carlosparadis/fires-from-space-australia-and-new-zeland)
