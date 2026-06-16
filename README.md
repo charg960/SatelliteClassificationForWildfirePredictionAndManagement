@@ -34,4 +34,4 @@ Key variables used:
 
 ## Pipeline Architecture
 
-Built with the `targets` package for fully reproducible execution.
+Built with the `targets` package for reproducible execution.
