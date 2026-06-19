@@ -68,7 +68,7 @@ daylight saving adjustments where applicable).
 Two separate spatial groupings are used in the pipeline:
 - **Fine-grained (`round(lat/lon, 2)`, ~1.1km):** "Fires in same place;" orders
 detections at the same physical point through time, for `time_since_last` calculation.
-- **Coarse-grained (`round(lat/lon, 1)`, ~11km, 2-hour bins):** "Fires in same area;"finds nearby 
+- **Coarse-grained (`round(lat/lon, 1)`, ~11km, 2-hour bins):** "Fires in same area;" finds nearby 
   fire detections to compute neighbor-cluster statistics (`neighbor_mean_frp`, 
   `neighbor_count`).
 
