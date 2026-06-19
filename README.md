@@ -48,6 +48,7 @@ dataset (test splits, new regions, future years). This is cross-validated
 against domain-standard FRP severity thresholds from fire science literature
 (source below) to confirm the training-derived cutoffs are 
 physically reasonable, rather than purely an artifact of this dataset.
+
 [Severe Fire Danger Index: A Forecastable Metric to Inform Firefighter and Community Wildfire
 Risk Management](https://www.fs.usda.gov/rm/pubs_journals/2019/rmrs_2019_jolly_m001.pdf)
 
