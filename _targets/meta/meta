@@ -1,28 +1,24 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-create_diagnostic_plots|function|d1ce964bb48623cf
+create_diagnostic_plots|function|d1ce964bb48623cf|||||||||||||||
 raw_data|stem||269d1d5866f8774a|2c530c1562a7fbd1|-1101284392||t20617.9425386255s||0|rds|local|vector|||0.715||'data/raw_wildfire_data.csv' does not exist in current working directory ('/Users/litchar/Desktop/Satellite_Wildfire_Pipeline').
-wildfire_data_file|stem|87403c73f1842584|e9276ce1d7f72b9b|2c530c1562a7fbd1|-316255966|/Users/litchar/Library/Mobile Documents/com~apple~Numbers/Documents/Fires_From_Space_Australia_Dataset.xlsx|t20562.9693511515s|s2285127b|2285127|file|local|vector|||1.325||
-cleaned_fires|stem|909f4c8a0a3ce99f|f1fdce6363c61e30|a339499c5e42ee1e|-458096219||t20617.9818157166s|s460832b|460832|rds|local|vector|||4.657||
-split_datasets|stem|4dfcf89a26199f8a|8ca480fb8cd2e537|acff242e79e3f658|-711902115||t20617.9818173119s|s496079b|496079|rds|local|vector|||0.005||
-plot_eda_thermal|stem|383a27409251ed12|43dedf2aa2fd61a8|ff94c1a53de20add|1643374710||t20617.9818214025s|s1609695b|1609695|rds|local|vector|||0.028||
-plot_eda_box|stem|debc9332c647282d|956b0f1a6209dc85|0e5f92ba62f15f85|1342452542||t20617.9818256272s|s1661261b|1661261|rds|local|vector|||0.025||
-model_decision_tree|stem|3471c644862b6d75|09c5468f39b1284a|26acc84ce791c815|434440334||t20617.9818274891s|s350224b|350224|rds|local|vector|||0.087||
-model_rf_intensity|stem|0ce846101c69f823|cd96fd693914ab4c|0e01437764766665|-1380356241||t20617.9818866365s|s1851136b|1851136|rds|local|vector|||4.752||
-pca_results|stem|8fadff07b6212cc3|1ddf2d94be998cc9|af5cbe21da8df71c|1337562950||t20617.9818914546s|s184498b|184498|rds|local|vector|||0.371||
-model_rf_day|stem|ce3e8fd297129d20|4533120358a37ff5|f08da54d8c6b5b55|1061488394||t20617.9819059487s|s446746b|446746|rds|local|vector|||1.146||
-misclass_diagnostics|stem|5389f235a7e4fbfd|7316b0f049f11938|1005df5a37f13db7|-115717381||t20617.981908208s|s170359b|170359|rds|local|vector|||0.116||
-plot_ml_heatmap|stem|f44cb911b4a59b37|3a5e88c4cd760a26|6d9322f241b2d4ea|180909529||t20617.9819105121s|s7537b|7537|rds|local|vector|||0.154||
-plot_ml_predictions|stem|1d14d1ca96fe2de7|1fbb98fc266e5dca|aaf85b22e90fa4d5|1734415135||t20617.9819181336s|s2308276b|2308276|rds|local|vector|||0.13||
-model_rf_pca|stem|11c9edffb22ef0bc|63b0e0e83a7febaa|47ac03e67d7e161c|1648326492||t20617.9819527424s|s11340672b|11340672|rds|local|vector|||1.137||
-plot_misclass_density|stem|5da86501d37be694|cae5655de5d798a0|9d0ff3bc10852284|210450795||t20617.9819552391s|s780195b|780195|rds|local|vector|||0.021||
-plot_ml_boundaries|stem|fcd106a7c4bafbfb|051e9b81a0e57986|148bdcdf6b44cf96|-1408861509||t20617.98198025s|s12646888b|12646888|rds|local|vector|||0.215||
-model_xgb_intensity|stem|520d3d2d2ba6f4e2|a33e5026c5ade181|e0d37e8b99854031|-1942939722||t20617.9851092472s|s874786b|874786|rds|local|vector|||0.501||
 plot_xgb_predictions|stem||cf85d9c6e048f351|5a96ad377b23e96a|1855033686||t20617.9851098624s||0|rds|local|vector|||0.003||could not find function 'plot_intensity_predictions_xgb'
+global_modis_file|stem|f904e0fadbb9c761|397ef82d5e2671d0|2c530c1562a7fbd1|-1624815648|data/raw/modis_2024_global.csv|t20623.9236485608s|s423910254b|423910254|file|local|vector|||1.157||
+wildfire_data_file|stem|87403c73f1842584|a1dde81aca1da0c0|2c530c1562a7fbd1|-316255966|data/raw/Fires_From_Space_Australia_Dataset.xlsx|t20623.9292642847s|s2285127b|2285127|file|local|vector|||0||
+cleaned_fires|stem|f108313b548503c5|f1fdce6363c61e30|88a6910e92e58487|-458096219||t20624.0561715864s|s413980b|413980|rds|local|vector|||0.501|There was 1 warning in `mutate()`. ℹ In argument: `tz_name = lutz::tz_lookup_coords(lat = latitude, lon =   longitude, method = 'fast')`. Caused by warning: ! Using 'fast' method. This can cause inaccuracies in time zones   near boundaries away from populated ares. Use the 'accurate'   method if accuracy is more important than speed.|
+split_datasets|stem|b1fc81d5b82160af|8ca480fb8cd2e537|d0563321f07695b5|-711902115||t20624.0561730633s|s469364b|469364|rds|local|vector|||0.008||
+cleaned_global_fires|stem|636eee08c3369a92|3c2d0c0992ded040|16edc464cdeabfe3|294573183||t20624.0565656357s|s53552752b|53552752|rds|local|vector|||23.658|There was 1 warning in `mutate()`. ℹ In argument: `tz_name = lutz::tz_lookup_coords(lat = latitude, lon =   longitude, method = 'fast')`. Caused by warning: ! Using 'fast' method. This can cause inaccuracies in time zones   near boundaries away from populated ares. Use the 'accurate'   method if accuracy is more important than speed.|
+plot_eda_thermal|stem|078e1ce64763c280|43dedf2aa2fd61a8|749364a428083d54|1643374710||t20624.0565705078s|s1469764b|1469764|rds|local|vector|||0.05||
+plot_eda_box|stem|2d62cc12a369be8c|956b0f1a6209dc85|9c2dbccf763bf872|1342452542||t20624.0565746927s|s1520621b|1520621|rds|local|vector|||0.034||
+model_xgb_intensity|stem|1ed5bcb1e80ad40c|a33e5026c5ade181|63ecf761cfaf8bce|-1942939722||t20624.0565818495s|s883248b|883248|rds|local|vector|||0.528||
+model_decision_tree|stem|c11fc7d39232f8bb|09c5468f39b1284a|c8467a965b99affb|434440334||t20624.0565836244s|s352357b|352357|rds|local|vector|||0.074||
+pca_results|stem|bbd8c909da1b2887|1ddf2d94be998cc9|c03054c8926a0f2a|1337562950||t20624.0566442575s|s205019b|205019|rds|local|vector|||0.557||
+model_rf_day|stem|d0e06eb9798deb44|4533120358a37ff5|6e4c086bca13ab27|1061488394||t20624.0566591411s|s441172b|441172|rds|local|vector|||1.182||
+global_xgb_predictions|stem|828a99dd48e6922a|210e8e7422073c04|b1d718212d6aefb2|1602409039||t20624.0568432493s|s433688b|433688|rds|local|vector|||14.404||
 predict_xgb|function|3f1460c28c6b1228
 compute_pca|function|99971bb8987750d6
 train_rf_pca|function|496aa1a5c1677a5e
-load_and_clean_fires|function|dd80b96c6ccf1a58
-train_rf_intensity|function|bd7d1acb9915893b
+load_and_clean_fires|function|a156a8ab4a7ba958
+train_rf_intensity|function|aa0677883d3fa633
 plot_diurnal_boxplots|function|8580eb0cd35e3b7f
 train_decision_tree|function|d44d374475b83f27
 train_xgb_intensity|function|3ac0638714ccc558
@@ -34,3 +30,15 @@ plot_thermal_signals|function|f8fb332f4f4b95f6
 plot_intensity_predictions|function|a7e3ade4432d56a3
 train_rf_day|function|23ded09d79d6c9ac
 plot_pca_boundaries|function|9f5d0bbb4fe7ff08
+model_rf_intensity|stem|2ae0e8e563f97fb2|cd96fd693914ab4c|2d59b0b61528be96|-1380356241||t20624.0608306232s|s1396019b|1396019|rds|local|vector|||3.756||
+misclass_diagnostics|stem|d6439c575fe44664|7316b0f049f11938|d3e519c04fd532d9|-115717381||t20624.0608329656s|s163776b|163776|rds|local|vector|||0.115||
+plot_ml_heatmap|stem|46e9f7e13ed6d786|3a5e88c4cd760a26|4c8350bb6a35ebf1|180909529||t20624.0608350904s|s7442b|7442|rds|local|vector|||0.124||
+plot_ml_predictions|stem|6604a4b2fe4f116b|1fbb98fc266e5dca|4db4cb87e900ef64|1734415135||t20624.0608414573s|s1843777b|1843777|rds|local|vector|||0.13||
+global_rf_predictions|stem|fa473133cc03a1cd|31fec05e142af0bb|c6e7cc2007d69c80|1541690644||t20624.0613405469s|s3585653b|3585653|rds|local|vector|||41.232||
+global_misclass_diagnostics|stem|1d8b22753bd595bd|37f34f8db757e219|26c65db99b678fbb|-336059024||t20624.0619808383s|s57320416b|57320416|rds|local|vector|||41.911||
+model_rf_pca|stem|e5323b7f1d37705c|63b0e0e83a7febaa|12d1446dd0b67351|1648326492||t20624.0620174007s|s11599305b|11599305|rds|local|vector|||1.311||
+global_xgb_confusion|stem|b55193363b9c4aec|e4ae4c21d77243fb|146cb5919246dfc5|-521176118||t20624.0620333657s|s761b|761|rds|local|vector|||0.08||
+plot_misclass_density|stem|80b364584a94b5bf|cae5655de5d798a0|aec19bbe97e8bc2e|210450795||t20624.0620371343s|s754035b|754035|rds|local|vector|||0.064||
+global_rf_confusion|stem|f020d33d841c39e6|08d2cfc3ba9baad6|7e3fd87257dc69ba|-1107057350||t20624.0620551837s|s764b|764|rds|local|vector|||0.068||
+plot_global_misclass_density|stem|1b919136bd4ba379|fbd7d62830005a34|ae20195b99101036|-1029486241||t20624.0624502355s|s172221317b|172221317|rds|local|vector|||0.021||
+plot_ml_boundaries|stem|4828308017c95c5e|051e9b81a0e57986|231588bf5927b352|-1408861509||t20624.0624794654s|s12998717b|12998717|rds|local|vector|||0.261||

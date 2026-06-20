@@ -25,8 +25,17 @@ plot_misclass_distributions <- function(diagnostic_data) {
     )
 }
 
-load_and_clean_fires <- function(filepath) {
-  fires <- readxl::read_excel(filepath, skip = 1)
+load_and_clean_fires <- function(filepath, frp_low_cutoff = NULL, frp_high_cutoff = NULL) {
+  if (grepl("\\.xlsx$", filepath)) {
+    fires <- readxl::read_excel(filepath, skip=1)
+  } else if (grepl("\\.csv$", filepath)) {
+    fires <- readr::read_csv(filepath)
+  } else {
+    stop("Unsupported file type: ", filepath)
+  }
+
+  if (is.null(frp_low_cutoff)) frp_low_cutoff <- quantile(fires$frp, 0.33, na.rm=TRUE)
+  if (is.null(frp_high_cutoff)) frp_high_cutoff <- quantile(fires$frp, 0.67, na.rm=TRUE)
   
   fires %>%
     mutate(
@@ -35,47 +44,94 @@ load_and_clean_fires <- function(filepath) {
       timestamp = ymd_hms(paste(acq_date, time_formatted)),
       missing_radiance = is.na(frp) | is.na(bright_t31),
       pixel_area = scan * track,          
-      frp_density = frp / (scan * track),  # intensity per unit area
-      confidence_num = as.numeric(confidence)  # it's character in MODIS data
+      frp_density = frp / (scan * track),
+      confidence_num = as.numeric(confidence)
     ) %>%
     filter(frp >= 0, bright_t31 > 200, bright_t31 < 400) %>%
-    arrange(latitude, longitude, timestamp) %>%
-    group_by(round(latitude, 2), round(longitude, 2)) %>%
-    arrange(timestamp, .by_group = TRUE) %>%
+    
+    # ===== TIMEZONE / DIURNAL CALCULATION — done ONCE, ungrouped, on the whole dataset =====
+  mutate(
+    tz_name = lutz::tz_lookup_coords(lat = latitude, lon = longitude, method = "fast")
+  ) %>%
+    group_by(tz_name) %>%
     mutate(
-      local_time = timestamp + dhours(longitude / 15),
+      local_time = lubridate::with_tz(timestamp, tzone = tz_name[1])
+    ) %>%
+    ungroup() %>%
+    mutate(
       hour_of_day = hour(local_time),
-      diurnal_cycle = sin(2 * pi * hour_of_day / 24),
-      time_since_last = as.numeric(difftime(timestamp, lag(timestamp), units = "hours"))
+      diurnal_cycle = sin(2 * pi * hour_of_day / 24)
     ) %>%
-    ungroup() %>%
-    # Spatial neighbor mean FRP within ~10km and 2 hours
+    
+    # ===== SPATIAL GROUPING #1: ~1.1km precision =====
+  # Used ONLY to compare consecutive detections at essentially the same location,
+  # so time_since_last reflects the gap since the last detection at that SAME spot.
+  # Resolution: round(lat/lon, 2) ≈ 0.01° ≈ 1.1km grid cells.
+  # NOTE: originally implemented via group_by(), which was prohibitively slow
+  # at global scale (~3.5M distinct groups out of 4.85M rows — nearly 1:1,
+  # so grouping overhead dominated). Replaced with: sort once by location+time,
+  # then compare each row to the row immediately before it — mathematically
+  # equivalent, but avoids group_by() entirely.
+  mutate(
+    lat_round = round(latitude, 2),
+    lon_round = round(longitude, 2)
+  ) %>%
+    arrange(lat_round, lon_round, timestamp) %>%
     mutate(
-      lat_bin = round(latitude, 1),   # ~11km bins
-      lon_bin = round(longitude, 1),
-      time_bin = floor(as.numeric(timestamp) / 7200)  # 2-hour bins
+      prev_lat_round = lag(lat_round),
+      prev_lon_round = lag(lon_round),
+      prev_timestamp = lag(timestamp),
+      same_location = (lat_round == prev_lat_round) & (lon_round == prev_lon_round),
+      time_since_last = if_else(
+        same_location,
+        as.numeric(difftime(timestamp, prev_timestamp, units = "hours")),
+        NA_real_
+      )
+      # ^ time_since_last feeds: train_rf_day(), train_rf_intensity(),
+      #   train_decision_tree(), train_xgb_intensity(), compute_pca()
     ) %>%
-    group_by(lat_bin, lon_bin, time_bin) %>%
-    mutate(
-      neighbor_mean_frp = mean(frp, na.rm = TRUE),   # <-- THE KEY FEATURE
-      neighbor_count = n()
-    ) %>%
-    ungroup() %>%
-    select(-lat_bin, -lon_bin, -time_bin) %>%
+    select(-lat_round, -lon_round, -prev_lat_round, -prev_lon_round, -prev_timestamp, -same_location) %>%
+    
+    # ===== SPATIAL GROUPING #2: coarse, ~11km precision, 2-hour time bins =====
+  # Used to find FIRE NEIGHBORS — other detections nearby in space AND time,
+  # to estimate local fire spread/clustering (not just one pixel's own reading).
+  # Resolution: round(lat/lon, 1) ≈ 0.1° ≈ 11km grid cells, 7200-sec (2hr) time bins.
+  # NOTE: this is a genuine group-wise aggregation (mean + count per group), so
+  # unlike Spatial Grouping #1, we can't avoid grouping entirely. dplyr::group_by()
+  # was prohibitively slow at global scale; data.table's grouped aggregation
+  # handles the same high-group-cardinality case in seconds instead of minutes.
+  {
+    dt <- data.table::as.data.table(.)
+    dt[, lat_bin := round(latitude, 1)]
+    dt[, lon_bin := round(longitude / cos(latitude * pi / 180), 1)]
+    dt[, time_bin := floor(as.numeric(timestamp) / 7200)]
+    dt[, neighbor_mean_frp := mean(frp, na.rm = TRUE), by = .(lat_bin, lon_bin, time_bin)]
+    # ^ neighbor_mean_frp feeds: train_decision_tree() ONLY
+    #   (NOT used by train_rf_intensity() or train_xgb_intensity() currently)
+    dt[, neighbor_count := .N, by = .(lat_bin, lon_bin, time_bin)]
+    # ^ neighbor_count feeds: train_decision_tree() ONLY
+    #   (NOT used by train_rf_intensity() or train_xgb_intensity() currently)
+    dt[, c("lat_bin", "lon_bin", "time_bin") := NULL]
+    as.data.frame(dt)
+  } %>%
+    
     mutate(
       day_night = factor(ifelse(hour_of_day >= 6 & hour_of_day <= 18, "Day", "Night")),
-      satellite = factor(satellite),   # Terra vs Aqua have different overpass times!!!!
-      type = factor(type),  #  (0=presumed veg fire, 1=active volcano, 2=other, 3=quality)
+      satellite = factor(satellite),
+      type = factor(type),
       intensity_class = factor(case_when(
-        frp < quantile(frp, 0.33) ~ "Low",
-        frp < quantile(frp, 0.67) ~ "Medium",
+        frp < frp_low_cutoff  ~ "Low",
+        frp < frp_high_cutoff ~ "Medium",
         TRUE ~ "High"
       ), levels = c("Low", "Medium", "High")),
+      # ^ intensity_class is the TARGET LABEL for:
+      #   train_rf_intensity(), train_xgb_intensity(), train_decision_tree(),
+      #   train_rf_pca(), and every plot_* / diagnostic function downstream
       log_frp = log1p(frp)
     ) %>%
     drop_na(frp, bright_t31, hour_of_day, diurnal_cycle, time_since_last, 
             day_night, intensity_class, confidence_num, pixel_area, frp_density)
-  }
+}
 
 split_wildfire_data <- function(data, p = 0.7, seed = 123) {
   set.seed(seed)
@@ -122,7 +178,7 @@ train_decision_tree <- function(train_data) {
     method = "class",
     control = rpart.control(
       cp = 0.01,        # Standard starting place for pruning
-      maxdepth = 6,     # Allows deeper interactions (e.g., bright_t31 nested inside time_of_day)
+      maxdepth = 6,     # Allows deeper interactions (such as bright_t31 nested inside time_of_day)
       minsplit = 20, 
       minbucket = 7
     )
@@ -140,8 +196,7 @@ train_rf_intensity <- function(train_data) {
   
   randomForest(
     formula = intensity_class ~ bright_t31 + hour_of_day + diurnal_cycle + 
-      time_since_last + pixel_area + frp_density + 
-      confidence_num + satellite + type,
+      time_since_last + pixel_area + frp_density + confidence_num,
     data = train_data,
     ntree = 500,
     mtry = 4,

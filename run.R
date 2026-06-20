@@ -1,6 +1,7 @@
 # runs pipeline and reviews results
 source("R/functions.R") 
 library(targets)
+library(randomForest)
 library(xgboost)
 library(usethis)
 
@@ -19,7 +20,6 @@ grid::grid.newpage()
 grid::grid.draw(tar_read(plot_ml_heatmap)$gtable)
 
 gert::git_status()
-gert::git_progress()
 gert::git_init("/Users/litchar/Desktop/Satellite_Wildfire_Pipeline")
 
 
