@@ -5,32 +5,36 @@ reproducible R targets pipeline with Random Forest and XGBoost models.
 
 ## Overview
 
-This project builds a production-style machine learning pipeline to classify 
-wildfire intensity from satellite-derived thermal and temporal features. 
-It uses the `targets` package for full pipeline reproducibility.
+In this project, I build a production-style machine learning pipeline to classify 
+wildfire intensity from satellite-derived thermal and temporal features. The 
+full pipeline is reproducible end-to-end using the `targets` package - see 
+*Pipeline Architecture* below for setup and data download instructions.
 
-Two classification tasks are addressed:
-- **Day vs Night** fire activity detection
-- **Fire Intensity** classification (Low / Medium / High)
+**Fire Intensity classification** (Low / Medium / High) is the primary, 
+fully-evaluated task in this project. Final models achieve **99.19% (RF) and 
+99.09% (XGBoost)** accuracy on held-out Australian test data, and **98.11% 
+(RF) and 98.15% (XGBoost)** accuracy when tested on a separate global dataset 
+spanning 207 countries (see "Global Generalization Test" below for full 
+results and a key finding about intensity threshold generalization).
 
-Final models achieve **98.6% (RF) and 99.4% (XGBoost)** accuracy on held-out test data.
+A secondary **Day vs Night** fire-activity model (`model_rf_day`) is also 
+trained as part of the pipeline but is not currently evaluated or reported 
+on in this README.
 
-Still in progress: Testing on other datasets.
+## Datasets
 
-## Dataset
+**Australia & New Zealand (training data):**
+[Fires From Space - Australia & New Zealand](https://www.kaggle.com/datasets/carlosparadis/fires-from-space-australia-and-new-zeland) 
+— Kaggle dataset of MODIS satellite fire detections across Australia and New Zealand.
 
-**Source:** [Fires From Space - Australia & New Zealand](https://www.kaggle.com/datasets/carlosparadis/fires-from-space-australia-and-new-zeland)
-
-MODIS satellite fire detections across Australia and New Zealand.
-
-Key variables used:
-- `frp` — Fire Radiative Power (MW), measure of fire intensity
-- `bright_t31` — Thermal channel brightness temperature
-- `scan * track` — Pixel footprint area (corrects for edge-of-swath distortion)
-- `confidence` — NASA detection confidence score
-- `satellite` — Terra vs Aqua sensor
-- `type` — Fire type (vegetation, volcano, other)
-- Timestamp, latitude, longitude
+**Global 2024 (generalization test data):**
+[NASA FIRMS Fire Archive Download](https://firms.modaps.eosdis.nasa.gov/data/download/DL_FIRE_M-C61_762558.zip)
+- Data Source: MODIS C6.1
+- Date Range: 2024-01-01 to 2024-12-31
+- Output Format: CSV
+- Area of Interest: -180,-90,180,90 (global; full latitude/longitude extent)
+- Downloaded as 207 separate per-country CSV files, combined into a single file
+  ~4.85 million row dataset (see *Pipeline Architecture* for combination steps).
 
 ## Methodology Notes & Design Decisions
 
@@ -44,10 +48,12 @@ artificially inflated "High" class.
 
 **Fix:** FRP cutoffs are now calculated once from the training dataset and 
 passed as fixed arguments to `load_and_clean_fires()` for any subsequent 
-dataset (test splits, new regions, future years). This is cross-validated 
-against domain-standard FRP severity thresholds from fire science literature
-(source below) to confirm the training-derived cutoffs are 
-physically reasonable, rather than purely an artifact of this dataset.
+dataset (test splits, new regions, future years).
+
+*In progress: cross-validating these training-derived cutoffs against 
+domain-standard FRP severity thresholds from fire science literature, to 
+confirm they're physically reasonable rather than purely an artifact of 
+this dataset's distribution.*
 
 [Severe Fire Danger Index: A Forecastable Metric to Inform Firefighter and Community Wildfire
 Risk Management](https://www.fs.usda.gov/rm/pubs_journals/2019/rmrs_2019_jolly_m001.pdf)
@@ -143,4 +149,67 @@ failure and facilitated reliable performance on new data.
 
 ## Pipeline Architecture
 
-Built with the `targets` package for reproducible execution.
+Built with the [`targets`](https://books.ropensci.org/targets/) package for 
+full pipeline reproducibility — every step from raw data to trained models 
+to evaluation plots is defined as a tracked, cached target in `_targets.R`.
+
+### Setup
+
+1. Clone this repository.
+2. Open `Satellite_Wildfire_Pipeline.Rproj` in RStudio (ensures working 
+   directory and relative paths resolve correctly).
+3. Install required packages:
+```r
+   install.packages(c(
+     "tidyverse", "lubridate", "readxl", "readr", "caret", "lutz",
+     "randomForest", "rpart", "rpart.plot", "pheatmap", "xgboost",
+     "data.table", "targets"
+   ))
+```
+
+### Getting the data
+
+This pipeline expects two raw data files in `data/raw/`:
+
+1. **`Fires_From_Space_Australia_Dataset.xlsx`** — download from the 
+   [Kaggle Australia/NZ dataset](https://www.kaggle.com/datasets/carlosparadis/fires-from-space-australia-and-new-zeland) 
+   linked in *Datasets* above, and place in `data/raw/`.
+
+2. **`modis_2024_global.csv`** — download the 
+   [NASA FIRMS 2024 global MODIS archive](https://firms.modaps.eosdis.nasa.gov/data/download/DL_FIRE_M-C61_762558.zip) 
+   linked in *Datasets* above. This downloads as 207 separate per-country CSVs; 
+   combine them into one file before placing in `data/raw/`:
+```r
+   library(dplyr)
+   library(purrr)
+   
+   csv_files <- list.files("path/to/downloaded/modis/folder", 
+                            pattern = "\\.csv$", full.names = TRUE)
+   combined_modis <- map_dfr(csv_files, read.csv)
+   write.csv(combined_modis, "data/raw/modis_2024_global.csv", row.names = FALSE)
+```
+
+### Running the pipeline
+
+```r
+source("R/functions.R")
+library(targets)
+tar_make()
+```
+
+`targets` will build everything in correct dependency order: data cleaning → 
+train/test split → model training (Random Forest, XGBoost, Decision Tree, 
+PCA-based RF) → evaluation on both the Australia test split and the global 
+dataset → diagnostic plots
+
+### Viewing results
+
+```r
+tar_read(global_rf_confusion)
+tar_read(global_xgb_confusion)
+tar_visnetwork()  # visual dependency graph of the full pipeline
+```
+
+**Note:** the combined global CSV is large (~400MB) and is excluded from 
+version control via Git LFS / `.gitignore`. See repository setup notes if 
+cloning and reproducing the global test from scratch.
