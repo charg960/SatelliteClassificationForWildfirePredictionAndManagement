@@ -82,10 +82,9 @@ now that global MODIS data is being tested).
 
 ## Global Generalization Test (2024 MODIS Archive, 207 Countries)
 
-To test whether the Australia-trained models generalize beyond their original 
-region, both models were evaluated against the full 2024 NASA FIRMS MODIS 
-archive — approximately 4.85 million fire detections spanning 207 countries 
-and territories.
+To test whether the Australia-trained models generalize reliably beyond their 
+original region, both models were evaluated against the full 2024 NASA FIRMS MODIS 
+archive (~4.85 million fire detections spanning 207 countries and territories).
 
 **Results:**
 - Random Forest: 98.11% accuracy (Kappa: 0.9711)
@@ -98,7 +97,7 @@ accuracy on entirely unseen, global data.
 ### Key Finding: Australia's Low/Medium Boundary Doesn't Fully Generalize
 
 The small amount of error that does appear is not evenly spread across 
-classes — it concentrates specifically at the **Low/Medium intensity boundary**:
+classes, but concentrates specifically at the **Low/Medium intensity boundary**:
 
 | Metric | Australia | Global |
 |---|---|---|
@@ -112,23 +111,22 @@ specifically.
 
 **Why this happens:** this project deliberately calculates FRP cutoffs for 
 Low/Medium/High *once*, from Australia's training data, and reuses those 
-same fixed numeric thresholds for any new dataset (see Methodology Notes 
-above) — rather than recalculating a new "top third" / "bottom third" cutoff 
-separately for each dataset tested. This was a deliberate design choice: 
-recalculating thresholds per-dataset would have hidden this exact finding, 
-since each new dataset's "Low" and "Medium" classes would have silently 
-redefined themselves around whatever data happened to be in them.
+same fixed thresholds for any new dataset rather than recalculating a new 
+"top third" / "bottom third" cutoff separately for each dataset tested. 
+This was a deliberate design choice: recalculating thresholds per-dataset 
+would have hidden this exact finding, since each new dataset's "Low" and "Medium" 
+classes would have redefined themselves around that dataset.
 
 Because the threshold stayed fixed, this test reveals something real: **fires 
 worldwide cluster differently around the Low/Medium FRP boundary than 
 Australian fires do.** Many fires elsewhere in the world sit closer to that 
 specific boundary than is typical in Australia, making them genuinely harder 
-to classify on one side or the other of that line using a boundary calibrated 
-to Australian fire behavior. This is not a bug in the pipeline — it's a 
-legitimate, fixed-threshold-revealed difference in how fire intensity is 
-distributed in Australia versus globally, and a meaningful limitation to keep 
+to classify on one side or the other based on a boundary calibrated 
+to Australian fire behavior. This is not a bug in the pipeline; it's a 
+legitimate difference in how fire intensity is distributed in Australia versus globally, 
+revealed by the fixed-threshold difference. It's also a meaningful limitation to keep 
 in mind if these specific thresholds were ever applied to inform real 
-decisions outside Australia.
+decisions *outside Australia*.
 
 **Model adjustment required for global testing:** the Random Forest model 
 originally included `satellite` and `type` (fire type: vegetation, volcano, 
