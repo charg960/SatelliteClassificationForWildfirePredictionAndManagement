@@ -40,3 +40,15 @@ tar_visnetwork()
 xgb_model <- tar_read(model_xgb_intensity)
 xgb_preds <- predict_xgb(xgb_model, test_data)
 caret::confusionMatrix(xgb_preds, test_data$intensity_class)
+
+# 5. GLOBAL GENERALIZATION TEST
+# These models were trained ONLY on Australian fire data. Here we test them
+# on a completely different dataset: 2024 MODIS fire detections from 207
+# countries worldwide. The Low/Medium/High thresholds were calculated once,
+# from Australia's data only, and reused as-is for this global data (instead
+# of being recalculated from scratch on each new dataset). This lets us see
+# how the Australia-trained model and Australia-based thresholds hold up
+# against real fire behavior elsewhere in the world.
+tar_read(global_rf_confusion)
+tar_read(global_xgb_confusion)
+
